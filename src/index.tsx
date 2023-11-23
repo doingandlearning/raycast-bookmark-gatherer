@@ -11,6 +11,7 @@ type Values = {
   description: string;
   tags: string[];
   customTags?: string
+  date: string;
 };
 
 export default function Command() {
@@ -51,8 +52,8 @@ export default function Command() {
   }, [url]);
 
   useEffect(() => {
-    if (!isLoading) {
-      (descriptionRef.current)?.focus();
+    if (!isLoading && descriptionRef.current) {
+      (descriptionRef.current as HTMLInputElement).focus();
     }
   }, [isLoading]);
 
@@ -61,10 +62,12 @@ export default function Command() {
       return
     }
     try {
-
-      const tagsArray = values.customTags!.split(/,|\s+/).filter(tag => tag.trim() !== "")
-      delete values.customTags;
-      saveDataToFile({ ...values, tags: tagsArray, date: new Date() });
+      let tagsArray
+      if (values.customTags) {
+        tagsArray = values.customTags.split(/,|\s+/).filter(tag => tag.trim() !== "")
+        delete values.customTags;
+      }
+      saveDataToFile({ ...values, tags: tagsArray || [], date: new Date().toISOString() });
       popToRoot()
       closeMainWindow({ clearRootSearch: true });
     } catch (error) {
@@ -73,7 +76,7 @@ export default function Command() {
     }
   }
 
-  function saveDataToFile(data) {
+  function saveDataToFile(data: Values) {
     const preferences = getPreferenceValues();
     const saveDirectory = preferences.saveDirectory || process.env.HOME; // Fallback to home directory
 
